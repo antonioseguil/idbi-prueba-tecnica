@@ -6,14 +6,63 @@ use App\Events\Vouchers\VouchersCreated;
 use App\Jobs\Vouchers\ProcessVoucherLinesJob;
 use App\Models\User;
 use App\Models\Voucher;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use SimpleXMLElement;
 
 class VoucherService
 {
-    public function getVouchers(int $page, int $paginate): LengthAwarePaginator
-    {
-        return Voucher::with(['lines', 'user'])->paginate(perPage: $paginate, page: $page);
+    public function getVouchers(
+        int $page,
+        int $paginate,
+        string $serie = null,
+        string $number = null,
+        string $dateStart = null,
+        string $dateEnd = null,
+        string $userId
+    ): LengthAwarePaginator {
+        $voucher = Voucher::with([
+            'lines:id,name,quantity,unit_price,voucher_id',
+            'user:id,name,email'
+        ])
+            ->where('user_id', $userId);
+
+        $voucher->when(
+            $serie,
+            function (Builder $query) use ($serie) {
+                return $query->where('voucher_serie', $serie);
+            }
+        );
+
+        $voucher->when(
+            $number,
+            function (Builder $query) use ($number) {
+                return $query->where('voucher_number', $number);
+            }
+        );
+
+        $voucher->when(
+            $dateStart && $dateEnd,
+            function (Builder $query) use ($dateStart, $dateEnd) {
+                return $query->whereBetween('created_at', [$dateStart, $dateEnd]);
+            }
+        );
+
+        return $voucher->paginate(perPage: $paginate, page: $page, columns: [
+            'id',
+            'issuer_name',
+            'issuer_document_type',
+            'issuer_document_number',
+            'receiver_name',
+            'receiver_document_type',
+            'receiver_document_number',
+            'total_amount',
+            'voucher_serie',
+            'voucher_number',
+            'voucher_type_id',
+            'currency',
+            'user_id',
+        ]);
     }
 
     /**

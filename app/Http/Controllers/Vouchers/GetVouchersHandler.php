@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Vouchers;
 
 use App\Http\Requests\Vouchers\GetVouchersRequest;
 use App\Http\Resources\Vouchers\VoucherResource;
+use App\Models\Voucher;
 use App\Services\VoucherService;
-use Illuminate\Http\Response;
+use Exception;
+use Illuminate\Http\JsonResponse;
 
 class GetVouchersHandler
 {
@@ -13,15 +15,28 @@ class GetVouchersHandler
     {
     }
 
-    public function __invoke(GetVouchersRequest $request): Response
+    public function __invoke(GetVouchersRequest $request): JsonResponse
     {
-        $vouchers = $this->voucherService->getVouchers(
-            $request->query('page'),
-            $request->query('paginate'),
-        );
+        $user = auth()->user();
+        try {
+            $vouchers = $this->voucherService->getVouchers(
+                page: $request->query('page'),
+                paginate: $request->query('paginate'),
+                serie: $request->query('serie'),
+                number: $request->query('number'),
+                dateStart: $request->query('date_start'),
+                dateEnd: $request->query('date_end'),
+                userId: $user->id
+            );
 
-        return response([
-            'data' => VoucherResource::collection($vouchers),
-        ], 200);
+            return response()->json($vouchers, 200);
+        } catch (Exception $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ], 400);
+        }
+
     }
 }
