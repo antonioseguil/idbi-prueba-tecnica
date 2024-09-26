@@ -72,7 +72,7 @@ class VoucherService
             "USD" => 0.0,
         ];
 
-        $voucher = Voucher::where('user_id', $userId);
+        $voucher = Voucher::where('user_id', $userId)->get(['id', 'user_id', 'currency', 'total_amount']);
 
         $result['PEN'] = $voucher->where('currency', 'PEN')->sum('total_amount');
         $result['USD'] = $voucher->where('currency', 'USD')->sum('total_amount');
