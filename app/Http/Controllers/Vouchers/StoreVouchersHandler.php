@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Vouchers;
 
+use App\Http\Requests\Vouchers\StoreVouchersRequest;
 use App\Http\Resources\Vouchers\VoucherResource;
 use App\Services\VoucherService;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class StoreVouchersHandler
@@ -14,7 +14,7 @@ class StoreVouchersHandler
     {
     }
 
-    public function __invoke(Request $request): Response
+    public function __invoke(StoreVouchersRequest $request): Response
     {
         try {
             $xmlFiles = $request->file('files');
