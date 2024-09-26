@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\Vouchers\VouchersCreated;
+use App\Jobs\Vouchers\ProcessVoucherLinesJob;
 use App\Models\User;
 use App\Models\Voucher;
 use App\Models\VoucherLine;
@@ -45,8 +46,7 @@ class VoucherService
         $receiverDocumentType = (string) $xml->xpath('//cac:AccountingCustomerParty/cac:Party/cac:PartyIdentification/cbc:ID/@schemeID')[0];
         $receiverDocumentNumber = (string) $xml->xpath('//cac:AccountingCustomerParty/cac:Party/cac:PartyIdentification/cbc:ID')[0];
 
-
-        $fullIdVoucher = explode((string) $xml->xpath('//cbc:ID')[0], '-');
+        $fullIdVoucher = explode('-', (string) $xml->xpath('//cbc:ID')[0]);
 
         $voucherSerie = trim($fullIdVoucher[0]);
         $voucherNumber = trim($fullIdVoucher[1]);
@@ -73,19 +73,16 @@ class VoucherService
 
         $voucher->save();
 
-        foreach ($xml->xpath('//cac:InvoiceLine') as $invoiceLine) {
-            $name = (string) $invoiceLine->xpath('cac:Item/cbc:Description')[0];
-            $quantity = (float) $invoiceLine->xpath('cbc:InvoicedQuantity')[0];
-            $unitPrice = (float) $invoiceLine->xpath('cac:Price/cbc:PriceAmount')[0];
+        $invoiceLines = $xml->xpath('//cac:InvoiceLine');
 
-            $voucherLine = new VoucherLine([
-                'name' => $name,
-                'quantity' => $quantity,
-                'unit_price' => $unitPrice,
-                'voucher_id' => $voucher->id,
-            ]);
+        if ($invoiceLines) {
+            foreach ($invoiceLines as $invoiceLine) {
+                $name = (string) $invoiceLine->xpath('cac:Item/cbc:Description')[0];
+                $quantity = (float) $invoiceLine->xpath('cbc:InvoicedQuantity')[0];
+                $unitPrice = (float) $invoiceLine->xpath('cac:Price/cbc:PriceAmount')[0];
 
-            $voucherLine->save();
+                dispatch(new ProcessVoucherLinesJob($name, $quantity, $unitPrice, $voucher->id));
+            }
         }
 
         return $voucher;
