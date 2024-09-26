@@ -22,6 +22,10 @@ use Illuminate\Support\Collection;
  * @property string $receiver_document_number
  * @property float $total_amount
  * @property string $xml_content
+ * @property string $voucher_serie
+ * @property string $voucher_number
+ * @property string $voucher_type_id
+ * @property string $currency
  * @property string $user_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -45,6 +49,10 @@ class Voucher extends Model
         'receiver_document_number',
         'total_amount',
         'xml_content',
+        'voucher_serie',
+        'voucher_number',
+        'voucher_type_id',
+        'currency',
         'user_id',
     ];
 
