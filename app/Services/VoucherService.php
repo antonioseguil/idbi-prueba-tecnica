@@ -136,17 +136,7 @@ class VoucherService
 
         $voucher->save();
 
-        $invoiceLines = $xml->xpath('//cac:InvoiceLine');
-
-        if ($invoiceLines) {
-            foreach ($invoiceLines as $invoiceLine) {
-                $name = (string) $invoiceLine->xpath('cac:Item/cbc:Description')[0];
-                $quantity = (float) $invoiceLine->xpath('cbc:InvoicedQuantity')[0];
-                $unitPrice = (float) $invoiceLine->xpath('cac:Price/cbc:PriceAmount')[0];
-
-                dispatch(new ProcessVoucherLinesJob($name, $quantity, $unitPrice, $voucher->id));
-            }
-        }
+        dispatch(new ProcessVoucherLinesJob($voucher));
 
         return $voucher;
     }

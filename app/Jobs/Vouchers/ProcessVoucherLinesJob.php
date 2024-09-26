@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Vouchers;
 
+use App\Models\Voucher;
 use App\Models\VoucherLine;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -9,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use SimpleXMLElement;
 
 class ProcessVoucherLinesJob implements ShouldQueue
 {
@@ -20,10 +22,7 @@ class ProcessVoucherLinesJob implements ShouldQueue
      * @param string $voucherId
      */
     public function __construct(
-        private string $name,
-        private float $quantity,
-        private float $unitPrice,
-        private string $voucherId
+        private Voucher $voucher,
     ) {
     }
 
@@ -32,13 +31,25 @@ class ProcessVoucherLinesJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $voucherLine = new VoucherLine([
-            'name' => $this->name,
-            'quantity' => $this->quantity,
-            'unit_price' => $this->unitPrice,
-            'voucher_id' => $this->voucherId,
-        ]);
+        $xml = new SimpleXMLElement($this->voucher->xml_content);
 
-        $voucherLine->save();
+        $invoiceLines = $xml->xpath('//cac:InvoiceLine');
+
+        if ($invoiceLines) {
+            foreach ($invoiceLines as $invoiceLine) {
+                $name = (string) $invoiceLine->xpath('cac:Item/cbc:Description')[0];
+                $quantity = (float) $invoiceLine->xpath('cbc:InvoicedQuantity')[0];
+                $unitPrice = (float) $invoiceLine->xpath('cac:Price/cbc:PriceAmount')[0];
+
+                $voucherLine = new VoucherLine([
+                    'name' => $name,
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
+                    'voucher_id' => $this->voucher->id,
+                ]);
+
+                $voucherLine->save();
+            }
+        }
     }
 }
