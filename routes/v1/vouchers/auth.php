@@ -12,3 +12,9 @@ Route::prefix('vouchers')->group(
         Route::post('/', StoreVouchersHandler::class);
     }
 );
+
+Route::prefix('voucher')->group(
+    function () {
+        Route::delete('/{id}', DeleteVoucherHandler::class);
+    }
+);

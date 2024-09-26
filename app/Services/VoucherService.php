@@ -6,7 +6,6 @@ use App\Events\Vouchers\VouchersCreated;
 use App\Jobs\Vouchers\ProcessVoucherLinesJob;
 use App\Models\User;
 use App\Models\Voucher;
-use App\Models\VoucherLine;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use SimpleXMLElement;
 
@@ -34,7 +33,7 @@ class VoucherService
         return $vouchers;
     }
 
-    public function storeVoucherFromXmlContent(string $xmlContent, User $user): Voucher
+    private function storeVoucherFromXmlContent(string $xmlContent, User $user): Voucher
     {
         $xml = new SimpleXMLElement($xmlContent);
 
@@ -86,5 +85,18 @@ class VoucherService
         }
 
         return $voucher;
+    }
+
+    public function deleteVoucher(string $voucherId): bool
+    {
+        $voucher = Voucher::find($voucherId);
+
+        if (!$voucher) {
+            return false;
+        }
+
+        $voucher->delete();
+
+        return true;
     }
 }
