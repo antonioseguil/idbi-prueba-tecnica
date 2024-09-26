@@ -15,6 +15,7 @@ Route::prefix('vouchers')->group(
 
 Route::prefix('voucher')->group(
     function () {
+        //Route::get('/', GetVoucherHandler::class);
         Route::delete('/{id}', DeleteVoucherHandler::class);
     }
 );

@@ -11,14 +11,10 @@ class DeleteVoucherHandler
     {
     }
 
-    /**
-     * Handle the incoming request.
-     */
     public function __invoke(string $id): JsonResponse
     {
         try {
             $status = $this->voucherService->deleteVoucher($id);
-
             return response()->json(["status" => $status], 200);
         } catch (Exception $exception) {
             return response()->json(["status" => $status, "message" => $exception->getMessage()], 400);
