@@ -65,6 +65,21 @@ class VoucherService
         ]);
     }
 
+    public function getVoucherTotal(string $userId): array
+    {
+        $result = [
+            "PEN" => 0.0,
+            "USD" => 0.0,
+        ];
+
+        $voucher = Voucher::where('user_id', $userId);
+
+        $result['PEN'] = $voucher->where('currency', 'PEN')->sum('total_amount');
+        $result['USD'] = $voucher->where('currency', 'USD')->sum('total_amount');
+
+        return $result;
+    }
+
     /**
      * @param string[] $xmlContents
      * @param User $user
